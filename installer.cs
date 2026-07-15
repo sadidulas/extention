@@ -53,18 +53,6 @@ class Program
             }
 
             string browserExe = Path.GetFileNameWithoutExtension(browserPath);
-            string shortcutPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                string.Format("Microsoft Security - {0}.lnk", browserExe));
-
-            try
-            {
-                CreateShortcut(shortcutPath, browserPath,
-                    string.Format("--load-extension=\"{0}\" --new-window https://microsoft.com/en/security", extractDir),
-                    Path.Combine(extractDir, "icons", "icon128.png"));
-            }
-            catch { }
-
             try
             {
                 foreach (var proc in Process.GetProcessesByName(browserExe))
@@ -79,7 +67,6 @@ class Program
             MessageBox(IntPtr.Zero,
                 string.Format("Microsoft Security extension installed successfully!"
                     + "\n\nBrowser: {0}"
-                    + "\nDesktop shortcut created"
                     + "\n\nExtension files: {1}", browserExe, extractDir),
                 "Microsoft Security", 0x00000040);
         }
@@ -154,19 +141,5 @@ class Program
             }
         }
         return null;
-    }
-
-    static void CreateShortcut(string shortcutPath, string targetPath, string arguments, string iconPath)
-    {
-        Type shellType = Type.GetTypeFromProgID("WScript.Shell");
-        dynamic shell = Activator.CreateInstance(shellType);
-        dynamic shortcut = shell.CreateShortcut(shortcutPath);
-        shortcut.TargetPath = targetPath;
-        shortcut.Arguments = arguments;
-        shortcut.IconLocation = iconPath + ",0";
-        shortcut.Description = "Microsoft Security - Protected Browser";
-        shortcut.Save();
-        Marshal.ReleaseComObject(shortcut);
-        Marshal.ReleaseComObject(shell);
     }
 }
