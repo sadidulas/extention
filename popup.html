@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microsoft Security - Cookie List</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      width: 440px;
+      min-height: 350px;
+      max-height: 600px;
+      overflow: hidden;
+    }
+
+    /* Microsoft Header */
+    .header {
+      background: linear-gradient(135deg, #0078d4 0%, #005a9e 50%, #003d6b 100%);
+      color: white;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header svg { width: 28px; height: 28px; flex-shrink: 0; }
+    .header h1 { font-size: 15px; font-weight: 600; }
+    .header .badge {
+      margin-left: auto;
+      background: rgba(255,255,255,0.2);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      background: white;
+      padding: 10px 18px;
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid #e0e0e0;
+      align-items: center;
+    }
+    .toolbar input {
+      flex: 1;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 12px;
+      outline: none;
+    }
+    .toolbar input:focus { border-color: #0078d4; box-shadow: 0 0 0 2px rgba(0,120,212,0.15); }
+    .toolbar .count {
+      font-size: 12px;
+      color: #666;
+      white-space: nowrap;
+      min-width: 50px;
+    }
+    .btn {
+      padding: 7px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-download { background: #0078d4; color: white; }
+    .btn-download:hover { background: #005a9e; }
+    .btn-clear { background: #f5f5f5; color: #d32f2f; border: 1px solid #e0e0e0; }
+    .btn-clear:hover { background: #fbe9e7; border-color: #d32f2f; }
+    .btn-refresh { background: #f5f5f5; color: #555; border: 1px solid #e0e0e0; }
+    .btn-refresh:hover { background: #e8e8e8; }
+
+    /* Cookie List - simple flat list */
+    .list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .list::-webkit-scrollbar { width: 5px; }
+    .list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    .cookie-item {
+      padding: 10px 18px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 12px;
+      transition: background 0.1s;
+    }
+    .cookie-item:hover { background: #f0f6fc; }
+
+    .cookie-item .domain {
+      font-size: 11px;
+      color: #0078d4;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .cookie-item .name {
+      font-weight: 600;
+      color: #1a1a1a;
+      word-break: break-all;
+    }
+    .cookie-item .value {
+      color: #555;
+      word-break: break-all;
+      font-size: 11px;
+      margin-top: 1px;
+      max-height: 32px;
+      overflow: hidden;
+    }
+    .cookie-item .meta {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+      font-size: 10px;
+      color: #999;
+    }
+    .cookie-item .meta .tag {
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+    }
+    .tag-session { background: #fff3e0; color: #e65100; }
+    .tag-secure { background: #e8f5e9; color: #2e7d32; }
+    .tag-http { background: #fce4ec; color: #c62828; }
+
+    /* Empty */
+    .empty {
+      padding: 50px 20px;
+      text-align: center;
+      color: #aaa;
+    }
+    .empty svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 10px; }
+    .empty h3 { font-size: 14px; color: #888; margin-bottom: 4px; }
+    .empty p { font-size: 11px; }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      font-size: 12px;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid #e0e0e0;
+      border-top: 3px solid #0078d4;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Cloud status */
+    .cloud-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 18px;
+      background: #f0f7ff;
+      border-bottom: 1px solid #d0e4f7;
+      font-size: 11px;
+      color: #0078d4;
+    }
+    .cloud-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cloud-status .dot.on { background: #4caf50; }
+    .cloud-status .dot.off { background: #ccc; }
+    .cloud-status .dot.syncing { background: #ff9800; animation: pulse 0.8s infinite; }
+    @keyframes pulse { 50% { opacity: 0.4; } }
+    .cloud-status .status-text { flex: 1; }
+    .cloud-status .sync-btn {
+      background: none;
+      border: none;
+      color: #0078d4;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .cloud-status .sync-btn:hover { background: rgba(0,120,212,0.1); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-size: 11px;
+      opacity: 0;
+      transition: opacity 0.25s;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    .footer {
+      background: white;
+      border-top: 1px solid #e0e0e0;
+      padding: 6px 18px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <svg viewBox="0 0 28 28">
+      <rect x="2" y="2" width="10" height="10" rx="1.5" fill="#F25022"/>
+      <rect x="16" y="2" width="10" height="10" rx="1.5" fill="#7FBA00"/>
+      <rect x="2" y="16" width="10" height="10" rx="1.5" fill="#00A4EF"/>
+      <rect x="16" y="16" width="10" height="10" rx="1.5" fill="#FFB900"/>
+    </svg>
+    <h1>Microsoft Security</h1>
+    <div class="badge" id="countBadge">0 cookies</div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="Search cookie name or domain..." />
+    <span class="count" id="countLabel">0</span>
+    <button class="btn btn-download" id="downloadBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download
+    </button>
+    <button class="btn btn-refresh" id="refreshBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
+    <button class="btn btn-clear" id="clearBtn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>
+  </div>
+
+  <!-- Cloud Status -->
+  <div class="cloud-status" id="cloudStatus">
+    <span class="dot off" id="cloudDot"></span>
+    <span class="status-text" id="cloudText">Connecting to cloud...</span>
+    <button class="sync-btn" id="syncBtn">Sync Now</button>
+  </div>
+
+  <!-- Cookie List -->
+  <div class="list" id="cookieList">
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      Loading cookies...
+    </div>
+    <div class="empty" id="emptyState" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <h3>No cookies captured yet</h3>
+      <p>Browse any website — cookies will appear here as a list.</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Microsoft Security v1.0</span>
+    <span>Cookies listed automatically</span>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="supabase.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
